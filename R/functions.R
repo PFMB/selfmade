@@ -15,22 +15,19 @@ gen_samples <- function(
   nrSample = 1000,
   sampFun = function(n) rnorm(n, mean = 0, sd = this_sd),
   checkFun,
-  trace = 1)
+  trace = 0)
 {
-  if(trace)
-    pb <- txtProgressBar(min = 0, max = nrSample, style = 3)
   fac <- sampFun(nrSample)
   yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
-  logvals <- c()
-  for(i in 1:length(yb)){
 
-    logvals[i] <- checkFun(yb[[i]])
-    if(trace){
-      setTxtProgressBar(pb, i)
-    }
-
-  }
-  if(trace) close(pb)
+  cat("Parallel active!")
+  cluster_cl <- makeCluster(detectCores(logical = FALSE))
+  clusterEvalQ(cluster_cl, {library(mgcv)
+    library(cAIC4)})
+  clusterExport(cluster_cl,"selection_function")
+  logvals <- parSapply(cluster_cl, yb, checkFun)
+  stopCluster(cluster_cl)
+  cat("Parallel deactive!")
 
   return(list(logvals = logvals,
               fac = fac))
