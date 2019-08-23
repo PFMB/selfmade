@@ -32,8 +32,7 @@ gen_samples <- function(
     attr(draw,"os_info") <- sessionInfo()
     if (is.null(path)) stop("Specify path!")
     save(draw, file = paste0(path,"PoSI/",app,"/y_draw_",app,".RData"))
-    cat("Draws saved. \n")
-    q()
+    stop("Draws saved. \n")
   }
 
   cat("Parallel draw with checkFun exe active!")
@@ -227,7 +226,7 @@ pval_vT_cov <- function(
   attr(res_sampling,"time") <- Sys.time()
   attr(res_sampling,"os_info") <- sessionInfo()
   save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[nlength(y_idx)],".RData"))
-  if (!is.null(y_idx)) q()
+  if (!is.null(y_idx)) stop("Job finished. \n")
 
   # compute p-value and CI
   return(
