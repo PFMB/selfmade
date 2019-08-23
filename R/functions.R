@@ -15,10 +15,12 @@ gen_samples <- function(
   nrSample = 1000,
   sampFun = function(n) rnorm(n, mean = 0, sd = this_sd),
   checkFun,
+  trace = 0,
   init_draw = FALSE,
   set_seed = FALSE,
   y_idx = NULL,
-  append = "")
+  path = NULL,
+  app = "")
 {
   if (init_draw == TRUE) {
     if (set_seed == TRUE) set.seed(1)
@@ -28,7 +30,8 @@ gen_samples <- function(
     attr(draw,"seed") <- .Random.seed
     attr(draw,"time") <- Sys.time()
     attr(draw,"os_info") <- sessionInfo()
-    save(draw, file = paste0(path,"PoSI/y_draw_",append,".RData"))
+    if (!is.null(path)) stop("Specify path!")
+    save(draw, file = paste0(path,"PoSI/",app,"/y_draw_",app,".RData"))
     stop("Draws saved.")
   }
   fac <- sampFun(nrSample)
@@ -147,7 +150,12 @@ pval_vT_cov <- function(
   bayesian = FALSE,
   alpha = 0.05,
   maxiter = 10,
-  trace = TRUE,
+  trace = FALSE,
+  init_draw,
+  set_seed,
+  y_idx,
+  app,
+  path,
   ...
 )
 {
@@ -168,7 +176,12 @@ pval_vT_cov <- function(
     sampFun = function(n) rnorm(n, mean = tstat, sd = sqrt(var_est)),
     nrSample = nrSamples,
     checkFun = checkFun,
-    trace = trace)
+    init_draw = init_draw,
+    set_seed = set_seed,
+    y_idx = y_idx,
+    app = app,
+    trace = trace,
+    path = path)
 
   # extract survived samples and weights
   survr <- samples$fac[samples$logvals]
@@ -187,6 +200,11 @@ pval_vT_cov <- function(
       this_sd = sqrt(var_est[1]),
       sampFun = function(n) rnorm(n, mean = tstat, sd = var_est[2]),
       nrSample = nrSamples,
+      init_draw = init_draw,
+      set_seed = set_seed,
+      y_idx = y_idx,
+      app = app,
+      trace = trace,
       checkFun = checkFun)
 
     survr <- samples$fac[samples$logvals]
@@ -194,11 +212,14 @@ pval_vT_cov <- function(
     denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
     maxiter <- maxiter - 1
-
+    cat(paste0("Iteration Number:",maxiter))
   }
 
   w <- nom / denom
 
+  res_sampling <- list(samples, survr, tstat, w, var_est, alpha)
+
+  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,".RData"))
 
   # compute p-value and CI
   return(

@@ -146,7 +146,12 @@ mocasin <- function(
   vT = NULL,
   G = NULL,
   efficient = TRUE,
-  trace = TRUE
+  trace = TRUE,
+  init_draw = FALSE,
+  set_seed = FALSE,
+  y_idx = NULL,
+  app = "",
+  path = NULL
 )
 {
 
@@ -337,7 +342,12 @@ mocasin <- function(
                        nrSamples = nrSamples,
                        checkFun = checkFun,
                        bayesian = bayesian,
-                       trace = trace
+                       trace = trace,
+                       init_draw = init_draw,
+                       set_seed = set_seed,
+                       y_idx = y_idx,
+                       app = app,
+                       path = path
     )
     if(trace) cat("\n\n")
     pbi <<- pbi + 1
