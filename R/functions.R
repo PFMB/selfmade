@@ -30,12 +30,11 @@ gen_samples <- function(
     attr(draw,"seed") <- .Random.seed
     attr(draw,"time") <- Sys.time()
     attr(draw,"os_info") <- sessionInfo()
-    if (!is.null(path)) stop("Specify path!")
+    if (is.null(path)) stop("Specify path!")
     save(draw, file = paste0(path,"PoSI/",app,"/y_draw_",app,".RData"))
-    stop("Draws saved.")
+    cat("Draws saved. \n")
+    q()
   }
-  fac <- sampFun(nrSample)
-  yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
 
   cat("Parallel draw with checkFun exe active!")
   cluster_cl <- makeCluster(detectCores(logical = FALSE))
@@ -44,16 +43,20 @@ gen_samples <- function(
   clusterExport(cluster_cl,"selection_function")
 
   if (!is.null(y_idx)) {
+    load(file = paste0(path,"PoSI/",app,"/y_draw_",app,".RData"))
+    fac <- draw$fac
+    yb <- draw$yb
     logvals <- parSapply(cluster_cl, yb[y_idx], checkFun)
     stopCluster(cluster_cl)
-    cat("Parallel draw with checkFun exe and y_idx deactive!")
+    cat("Parallel draw with checkFun exe and y_idx deactive! \n")
     return(list(logvals = logvals, fac = fac))
   }
 
+  fac <- sampFun(nrSample)
+  yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
   logvals <- parSapply(cluster_cl, yb, checkFun)
   stopCluster(cluster_cl)
-  cat("Parallel draw with checkFun exe deactive!")
-
+  cat("Parallel draw with checkFun exe deactive! \n")
   return(list(logvals = logvals, fac = fac))
 
 }
@@ -205,6 +208,7 @@ pval_vT_cov <- function(
       y_idx = y_idx,
       app = app,
       trace = trace,
+      path = path,
       checkFun = checkFun)
 
     survr <- samples$fac[samples$logvals]
@@ -212,14 +216,18 @@ pval_vT_cov <- function(
     denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
     maxiter <- maxiter - 1
-    cat(paste0("Iteration Number:",maxiter))
+    cat(paste0("Iteration Number: ",maxiter,"\n"))
   }
 
   w <- nom / denom
 
-  res_sampling <- list(samples, survr, tstat, w, var_est, alpha)
-
-  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,".RData"))
+  res_sampling <- list("samp" = samples, "survr" = survr,
+                       "tstat" = tstat, "w" = w, "var_est" = var_est,
+                       "alpha" = alpha)
+  attr(res_sampling,"time") <- Sys.time()
+  attr(res_sampling,"os_info") <- sessionInfo()
+  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[nlength(y_idx)],".RData"))
+  if (!is.null(y_idx)) q()
 
   # compute p-value and CI
   return(
