@@ -15,22 +15,43 @@ gen_samples <- function(
   nrSample = 1000,
   sampFun = function(n) rnorm(n, mean = 0, sd = this_sd),
   checkFun,
-  trace = 0)
+  init_draw = FALSE,
+  set_seed = FALSE,
+  y_idx = NULL,
+  append = "")
 {
+  if (init_draw == TRUE) {
+    if (set_seed == TRUE) set.seed(1)
+    fac <- sampFun(nrSample)
+    yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
+    draw <- list("yb" = yb, "fac" = fac)
+    attr(draw,"seed") <- .Random.seed
+    attr(draw,"time") <- Sys.time()
+    attr(draw,"os_info") <- sessionInfo()
+    save(draw, file = paste0(path,"PoSI/y_draw_",append,".RData"))
+    stop("Draws saved.")
+  }
   fac <- sampFun(nrSample)
   yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
 
-  cat("Parallel active!")
+  cat("Parallel draw with checkFun exe active!")
   cluster_cl <- makeCluster(detectCores(logical = FALSE))
   clusterEvalQ(cluster_cl, {library(mgcv)
     library(cAIC4)})
   clusterExport(cluster_cl,"selection_function")
+
+  if (!is.null(y_idx)) {
+    logvals <- parSapply(cluster_cl, yb[y_idx], checkFun)
+    stopCluster(cluster_cl)
+    cat("Parallel draw with checkFun exe and y_idx deactive!")
+    return(list(logvals = logvals, fac = fac))
+  }
+
   logvals <- parSapply(cluster_cl, yb, checkFun)
   stopCluster(cluster_cl)
-  cat("Parallel deactive!")
+  cat("Parallel draw with checkFun exe deactive!")
 
-  return(list(logvals = logvals,
-              fac = fac))
+  return(list(logvals = logvals, fac = fac))
 
 }
 
