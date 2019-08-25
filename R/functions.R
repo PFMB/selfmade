@@ -20,6 +20,7 @@ gen_samples <- function(
   set_seed = FALSE,
   y_idx = NULL,
   path = NULL,
+  n_cores = detectCores(logical = FALSE),
   app = "")
 {
   if (init_draw == TRUE) {
@@ -36,7 +37,7 @@ gen_samples <- function(
   }
 
   cat("Parallel draw with checkFun exe active!")
-  cluster_cl <- makeCluster(detectCores(logical = FALSE))
+  cluster_cl <- makeCluster(n_cores)
   clusterEvalQ(cluster_cl, {library(mgcv)
     library(cAIC4)})
   clusterExport(cluster_cl,"selection_function")
@@ -156,6 +157,7 @@ pval_vT_cov <- function(
   init_draw,
   set_seed,
   y_idx,
+  n_cores,
   app,
   path,
   ...
@@ -183,6 +185,7 @@ pval_vT_cov <- function(
     y_idx = y_idx,
     app = app,
     trace = trace,
+    n_cores = n_cores,
     path = path)
 
   # extract survived samples and weights
@@ -206,6 +209,7 @@ pval_vT_cov <- function(
       set_seed = set_seed,
       y_idx = y_idx,
       app = app,
+      n_cores = n_cores,
       trace = trace,
       path = path,
       checkFun = checkFun)

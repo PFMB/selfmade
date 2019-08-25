@@ -150,6 +150,7 @@ mocasin <- function(
   init_draw = FALSE,
   set_seed = FALSE,
   y_idx = NULL,
+  n_cores = detectCores(logical = FALSE),
   app = "",
   path = NULL
 )
@@ -346,6 +347,7 @@ mocasin <- function(
                        init_draw = init_draw,
                        set_seed = set_seed,
                        y_idx = y_idx,
+                       n_cores = n_cores,
                        app = app,
                        path = path
     )
