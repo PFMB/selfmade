@@ -229,7 +229,7 @@ pval_vT_cov <- function(
                        "alpha" = alpha)
   attr(res_sampling,"time") <- Sys.time()
   attr(res_sampling,"os_info") <- sessionInfo()
-  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[nlength(y_idx)],".RData"))
+  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],".RData"))
   if (!is.null(y_idx)) stop("Job finished. \n")
 
   # compute p-value and CI
