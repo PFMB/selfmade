@@ -36,7 +36,7 @@ gen_samples <- function(
     stop("Draws saved. \n")
   }
 
-  cat("Parallel draw with checkFun exe active!")
+  cat("Parallel draw with checkFun exe active! \n")
   cluster_cl <- makeCluster(n_cores)
   clusterEvalQ(cluster_cl, {library(mgcv)
     library(cAIC4)})
@@ -197,6 +197,7 @@ pval_vT_cov <- function(
 
   while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0){
 
+    cat("Loop entered. \n")
     var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
 
     samples <- gen_samples(
@@ -230,6 +231,7 @@ pval_vT_cov <- function(
   attr(res_sampling,"time") <- Sys.time()
   attr(res_sampling,"os_info") <- sessionInfo()
   save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],".RData"))
+  cat("Computed results of samples saved. \n")
   if (!is.null(y_idx)) stop("Job finished. \n")
 
   # compute p-value and CI
