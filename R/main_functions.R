@@ -93,60 +93,78 @@ pval_vT_cov <- function(
   maxiter = 10,
   trace = TRUE,
   complete_effect = FALSE,
+  init_draw,
+  set_seed,
+  y_idx,
+  n_cores,
+  app,
+  path,
   ...
 )
 {
-  
+
   if(complete_effect){
     # group test
     # Adapted from iboost package (https://github.com/davidruegamer/iboost/)
-    
+
     m <- nrow(vT)
-    
+
     if(m==1) vT <- vT / as.numeric(sqrt(tcrossprod(vT)))
     R <- vT %*% this_y
     Z <- sqrt(sum(R^2))
     u <- t(vT) %*% R / Z
     yperp <- this_y - u * Z
     var <- attr(vT, "var")
-    
+
     sigma1 <- sqrt(m - 2 * (gamma((m+1)/2) / gamma(m/2))^2 )
-    
+
     # Do Monte Carlo (Importance Sampling)
-    ss <- gen_samples(checkFun = checkFun, 
+    ss <- gen_samples(checkFun = checkFun,
                       this_sd = NULL,
-                      sampFun = function(B){ 
-                        
+                      sampFun = function(B){
+
                         rBs <- Z + rnorm(B) * sigma1 * sqrt(var)
                         rBs[rBs>0]
-                        
-                      }, 
-                      nrSample = nrSamples, 
-                      orthdir = yperp, 
+
+                      },
+                      init_draw = init_draw,
+                      set_seed = set_seed,
+                      y_idx = y_idx,
+                      app = app,
+                      path = path,
+                      n_cores = n_cores,
+                      nrSample = nrSamples,
+                      orthdir = yperp,
                       dir = u)
-    
+
     rBs <- ss$fac
     survr <- rBs[ss$logvals]
-    
+
     Z <- Z/sqrt(var)
     s <- survr/sqrt(var)
     w <- (s^(m-1)) * (exp(-s^2/2)) / dnorm(s, mean = Z, sd = sigma1)
     var_est <- var
     tstat <- Z
-    
-    
-    
+
+    res_sampling <- list("samp" = ss, "survr" = survr, "s" = s,
+                         "tstat" = tstat, "w" = w, "var_est" = var_est)
+    attr(res_sampling,"time") <- Sys.time()
+    attr(res_sampling,"os_info") <- sessionInfo()
+    save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],".RData"))
+    cat("Computed results of samples saved. \n")
+    if (!is.null(y_idx)) stop("Job finished. \n")
+
   }else{ # standard "univariate" test
-    
+
     n <- length(this_y)
     vvT <- tcrossprod(vT)
     tstat <- as.numeric(vT%*%this_y)
-    
+
     if(!bayesian) var_est <- as.numeric(vT%*%VCOV%*%t(vT)) else
       var_est <- attr(vT, "var")
     dirV <- (VCOV%*%t(vT)/var_est)
     orthdir <- (diag(n) - dirV%*%vT)%*%this_y
-    
+
     samples <- gen_samples(
       orthdir = orthdir,
       dir = dirV,
@@ -154,38 +172,62 @@ pval_vT_cov <- function(
       sampFun = function(n) rnorm(n, mean = tstat, sd = sqrt(var_est)),
       nrSample = nrSamples,
       checkFun = checkFun,
-      trace = trace)
-    
+      init_draw = init_draw,
+      set_seed = set_seed,
+      y_idx = y_idx,
+      app = app,
+      trace = trace,
+      n_cores = n_cores,
+      path = path)
+
     # extract survived samples and weights
     survr <- samples$fac[samples$logvals]
     nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
     denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
-    
+
     var_est <- rep(var_est, 2)
-    
+
     while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0){
-      
+
+      cat("Loop entered. \n")
       var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
-      
+
       samples <- gen_samples(
         orthdir = orthdir,
         dir = dirV,
         this_sd = sqrt(var_est[1]),
         sampFun = function(n) rnorm(n, mean = tstat, sd = var_est[2]),
         nrSample = nrSamples,
+        init_draw = init_draw,
+        set_seed = set_seed,
+        y_idx = y_idx,
+        app = app,
+        n_cores = n_cores,
+        trace = trace,
+        path = path,
         checkFun = checkFun)
-      
+
       survr <- samples$fac[samples$logvals]
       nom <- dnorm(survr, mean = 0, sd = sqrt(var_est[1]))
       denom <- dnorm(survr, mean = tstat, sd = var_est[2])
-      
+
       maxiter <- maxiter - 1
-      
+      cat(paste0("Iteration Number: ",maxiter,"\n"))
+
     }
-    
+
     w <- nom / denom
 
   }
+
+  res_sampling <- list("samp" = samples, "survr" = survr,
+                       "tstat" = tstat, "w" = w, "var_est" = var_est,
+                       "alpha" = alpha)
+  attr(res_sampling,"time") <- Sys.time()
+  attr(res_sampling,"os_info") <- sessionInfo()
+  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],".RData"))
+  cat("Computed results of samples saved. \n")
+  if (!is.null(y_idx)) stop("Job finished. \n")
 
   # compute p-value and CI
   return(

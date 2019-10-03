@@ -17,7 +17,7 @@
 #' for which inference is done
 #' @param nrlocs integer; for the \code{gamm4}-case: the number of locations
 #' tested for non-linear effects
-#' @param complete_effect list of logical values for each \code{name}; 
+#' @param complete_effect list of logical values for each \code{name};
 #' TRUE performs a (conservative) test whether
 #' the whole spline has a significant influence after accounting for all other effects.
 #' @param which integer; for the \code{merMod}-case: defining the effect for
@@ -150,7 +150,13 @@ mocasin <- function(
   vT = NULL,
   G = NULL,
   efficient = TRUE,
-  trace = TRUE
+  trace = TRUE,
+  init_draw = FALSE,
+  set_seed = FALSE,
+  y_idx = NULL,
+  n_cores = detectCores(logical = FALSE),
+  app = "",
+  path = NULL
 )
 {
 
@@ -315,17 +321,22 @@ mocasin <- function(
 
   }else{ # additive case
 
-    wn <- paste(name, collapse = ",")
     if(is.null(wn)) wn <- attr(mod$gam$terms, "term.labels")
-    if(is.null(complete_effect)){ 
+    if(is.null(complete_effect)){
       complete_effect <- rep(FALSE, length(wn))
       names(complete_effect) <- wn
-    } else {
+    }
+
+    if(any(complete_effect) & length(name) == 1) {
+      names(complete_effect) <- name
+    }
+
+    if(length(name) == 2) {
+      if(!any(complete_effect)) stop("Single point testing only for univariate effects.")
+      wn <- paste(name, collapse = ",")
       names(complete_effect) <- paste(wn, collapse = ",")
     }
-    if(length(name) != 1 & (is.null(complete_effect)|(!complete_effect)))
-      stop("Single point evaluation only for univariate effects!")
-    
+
     vT <- sapply(wn, function(name)
       res <- testvec_for_gamm4(mod,
                                name = name,
@@ -333,9 +344,9 @@ mocasin <- function(
                                nrlocs = nrlocs,
                                complete_effect = complete_effect[[name]])
     )
-    
+
     if(is.list(vT[[1]])) vT <- unlist(vT, recursive = FALSE)
-    
+
   }
   #####################################################
 
@@ -354,7 +365,13 @@ mocasin <- function(
                        checkFun = checkFun,
                        bayesian = bayesian,
                        trace = trace,
-                       complete_effect = ce
+                       complete_effect = ce,
+                       init_draw = init_draw,
+                       set_seed = set_seed,
+                       y_idx = y_idx,
+                       n_cores = n_cores,
+                       app = app,
+                       path = path
     )
     if(trace) cat("\n\n")
     pbi <<- pbi + 1
@@ -362,7 +379,7 @@ mocasin <- function(
   }
   )
   # if(!isMM) names(selinf) <- wn
-  
+
   ######################################################
 
   retl <- list(vT = vT, selinf = selinf)
