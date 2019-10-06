@@ -37,7 +37,7 @@ gen_samples <- function(
   }
 
   cat("Parallel draw with checkFun exe active! \n")
-  cluster_cl <- makeCluster(n_cores)
+  cluster_cl <- makeCluster(n_cores, outfile = "")
   clusterEvalQ(cluster_cl, {library(mgcv)
     library(cAIC4)})
   clusterExport(cluster_cl,"selection_function")
