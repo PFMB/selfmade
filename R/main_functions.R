@@ -90,7 +90,7 @@ pval_vT_cov <- function(
   twosided = TRUE,
   bayesian = FALSE,
   alpha = 0.05,
-  maxiter = 10,
+  maxiter = 15,
   trace = TRUE,
   complete_effect = FALSE,
   init_draw,
@@ -186,8 +186,9 @@ pval_vT_cov <- function(
     denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
 
     var_est <- rep(var_est, 2)
+    ci_fail <- TRUE
 
-    while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0 & min(abs(nom/denom)) > 1e-64){
+    while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0 & ci_fail){
 
       cat("Loop entered. \n")
       var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
@@ -217,6 +218,9 @@ pval_vT_cov <- function(
     }
 
     w <- nom / denom
+    sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
+           var_est = var_est, alpha = alpha)
+    ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
 
   }
 
