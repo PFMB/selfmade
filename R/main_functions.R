@@ -226,7 +226,7 @@ pval_vT_cov <- function(
 
   res_sampling <- list("samp" = samples, "survr" = survr,
                        "tstat" = tstat, "w" = w, "var_est" = var_est,
-                       "alpha" = alpha)
+                       "alpha" = alpha, "vT" = vT)
   attr(res_sampling,"time") <- Sys.time()
   attr(res_sampling,"os_info") <- sessionInfo()
   save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],"_",as.character(Sys.time()),".RData"))
