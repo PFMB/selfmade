@@ -187,7 +187,7 @@ pval_vT_cov <- function(
 
     var_est <- rep(var_est, 2)
 
-    while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0){
+    while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0 & min(abs(nom/denom)) > 1e-64){
 
       cat("Loop entered. \n")
       var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
