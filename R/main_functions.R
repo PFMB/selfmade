@@ -231,7 +231,7 @@ pval_vT_cov <- function(
   attr(res_sampling,"os_info") <- sessionInfo()
   save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],"_",as.character(Sys.time()),".RData"))
   cat("Computed results of samples saved at:",as.character(Sys.time()),"\n")
-  return(NULL) # avoid Inf CI
+
   # compute p-value and CI
   return(
     selinf(
