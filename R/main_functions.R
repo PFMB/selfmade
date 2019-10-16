@@ -184,6 +184,7 @@ pval_vT_cov <- function(
     survr <- samples$fac[samples$logvals]
     nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
     denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
+    w <- nom / denom
 
     var_est <- rep(var_est, 2)
     ci_fail <- TRUE
