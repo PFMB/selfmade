@@ -215,13 +215,12 @@ pval_vT_cov <- function(
       maxiter <- maxiter - 1
       cat("Iteration Number:",maxiter,"\n")
 
+      w <- nom / denom
       sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
                             var_est = var_est, alpha = alpha)
       ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
 
     }
-
-    w <- nom / denom
 
     res_sampling <- list("samp" = samples, "survr" = survr,
                          "tstat" = tstat, "w" = w, "var_est" = var_est,
