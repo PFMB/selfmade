@@ -213,24 +213,25 @@ pval_vT_cov <- function(
       denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
       maxiter <- maxiter - 1
-      cat(paste0("Iteration Number: ",maxiter,"\n"))
+      cat("Iteration Number:",maxiter,"\n")
+
+      sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
+                            var_est = var_est, alpha = alpha)
+      ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
 
     }
 
     w <- nom / denom
-    sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
-           var_est = var_est, alpha = alpha)
-    ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
+
+    res_sampling <- list("samp" = samples, "survr" = survr,
+                         "tstat" = tstat, "w" = w, "var_est" = var_est,
+                         "alpha" = alpha, "vT" = vT)
+    attr(res_sampling,"time") <- Sys.time()
+    attr(res_sampling,"os_info") <- sessionInfo()
+    save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],"_",as.character(Sys.time()),".RData"))
+    cat("Computed results of samples saved at:",as.character(Sys.time()),"\n")
 
   }
-
-  res_sampling <- list("samp" = samples, "survr" = survr,
-                       "tstat" = tstat, "w" = w, "var_est" = var_est,
-                       "alpha" = alpha, "vT" = vT)
-  attr(res_sampling,"time") <- Sys.time()
-  attr(res_sampling,"os_info") <- sessionInfo()
-  save(res_sampling, file = paste0(path,"PoSI/",app,"/samp_",app,"_",y_idx[1],":",y_idx[length(y_idx)],"_",as.character(Sys.time()),".RData"))
-  cat("Computed results of samples saved at:",as.character(Sys.time()),"\n")
 
   # compute p-value and CI
   return(
