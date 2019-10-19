@@ -189,9 +189,9 @@ pval_vT_cov <- function(
     var_est <- rep(var_est, 2)
     ci_fail <- TRUE
 
-    while(sum(nom)==0 & all(denom!=0) & maxiter-1 > 0 & ci_fail){
+    while(maxiter-1 > 0 & ci_fail){
 
-      cat("Loop entered. \n")
+      cat("Loop iteration:", maxiter, "started. \n")
       var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
 
       samples <- gen_samples(
@@ -214,7 +214,7 @@ pval_vT_cov <- function(
       denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
       maxiter <- maxiter - 1
-      cat("Iteration Number:",maxiter,"\n")
+      cat("Loop iteration:", maxiter, "ended. \n")
 
       w <- nom / denom
       sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
