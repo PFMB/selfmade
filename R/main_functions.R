@@ -187,7 +187,9 @@ pval_vT_cov <- function(
     w <- nom / denom
 
     var_est <- rep(var_est, 2)
-    ci_fail <- TRUE
+    sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
+                          var_est = var_est, alpha = alpha)
+    ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
 
     while(maxiter-1 > 0 & ci_fail){
 
