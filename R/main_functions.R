@@ -187,6 +187,10 @@ pval_vT_cov <- function(
     w <- nom / denom
 
     var_est <- rep(var_est, 2)
+    cat("Distribution of weigths: \n")
+    print(summary(w))
+    cat("The variance is given by: \n")
+    print(var_est)
     sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
                           var_est = var_est, alpha = alpha)
     ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
@@ -216,12 +220,17 @@ pval_vT_cov <- function(
       denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
       maxiter <- maxiter - 1
-      cat("Loop iteration:", maxiter, "ended. \n")
 
       w <- nom / denom
+      cat("Distribution of weigths: \n")
+      print(summary(w))
+      cat("The variance is given by: \n")
+      print(var_est)
+
       sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
                             var_est = var_est, alpha = alpha)
       ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
+      cat("Loop iteration:", maxiter, "ended. \n")
 
     }
 
