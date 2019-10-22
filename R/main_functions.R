@@ -169,7 +169,7 @@ pval_vT_cov <- function(
       orthdir = orthdir,
       dir = dirV,
       this_sd = sqrt(var_est),
-      sampFun = function(n) rnorm(n, mean = tstat, sd = sqrt(var_est)),
+      sampFun = function(n) rnorm(n, mean = 0, sd = sqrt(var_est)),
       nrSample = nrSamples,
       checkFun = checkFun,
       init_draw = init_draw,
@@ -182,29 +182,32 @@ pval_vT_cov <- function(
 
     # extract survived samples and weights
     survr <- samples$fac[samples$logvals]
-    nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
-    denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
-    w <- nom / denom
+    # nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
+    # denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
+    # w <- nom / denom
+    nr_surv <- sum(samples$logvals)
+    cat("No. of survived samples:", nr_surv,"\n")
+    w <- rep(1,nr_surv)
 
     var_est <- rep(var_est, 2)
-    cat("Distribution of weigths: \n")
-    print(summary(w))
-    cat("The variance is given by: \n")
-    print(var_est)
-    sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
-                          var_est = var_est, alpha = alpha)
-    ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
+    # cat("Distribution of weigths: \n")
+    # print(summary(w))
+    # cat("The variance is given by: \n")
+    # print(var_est)
+    # sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
+    #                       var_est = var_est, alpha = alpha)
+    # ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
 
-    while(maxiter-1 > 0 & ci_fail){
+    while(maxiter-1 > 0 & nr_surv < 100){
 
       cat("Loop iteration:", maxiter, "started. \n")
-      var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
+      # var_est[2] <- var_est[2] * abs(tstat)/sqrt(var_est[2])
 
       samples <- gen_samples(
         orthdir = orthdir,
         dir = dirV,
         this_sd = sqrt(var_est[1]),
-        sampFun = function(n) rnorm(n, mean = tstat, sd = var_est[2]),
+        sampFun = function(n) rnorm(n, mean = 0, sd = var_est[1]),
         nrSample = nrSamples,
         init_draw = init_draw,
         set_seed = set_seed,
@@ -215,21 +218,25 @@ pval_vT_cov <- function(
         path = path,
         checkFun = checkFun)
 
+      nr_surv <- sum(samples$logvals)
+      cat("No. of survived samples:", nr_surv,"\n")
+
       survr <- samples$fac[samples$logvals]
-      nom <- dnorm(survr, mean = 0, sd = sqrt(var_est[1]))
-      denom <- dnorm(survr, mean = tstat, sd = var_est[2])
+      # nom <- dnorm(survr, mean = 0, sd = sqrt(var_est[1]))
+      # denom <- dnorm(survr, mean = tstat, sd = var_est[2])
 
       maxiter <- maxiter - 1
+      w <- rep(1,nr_surv)
 
-      w <- nom / denom
-      cat("Distribution of weigths: \n")
-      print(summary(w))
-      cat("The variance is given by: \n")
-      print(var_est)
+      # w <- nom / denom
+      # cat("Distribution of weigths: \n")
+      # print(summary(w))
+      # cat("The variance is given by: \n")
+      # print(var_est)
 
       sel_inf_res <- selinf(survr = survr, tstat = tstat, w = w,
                             var_est = var_est, alpha = alpha)
-      ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
+      # ci_fail <- is.infinite(sel_inf_res$cil) | is.infinite(sel_inf_res$ciu)
       cat("Loop iteration:", maxiter, "ended. \n")
 
     }
