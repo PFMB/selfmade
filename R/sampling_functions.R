@@ -24,6 +24,7 @@ gen_samples <- function(
   app = "")
 {
   cat("Parallel execution of checkFun active! \n")
+  if(set_seed == TRUE) set.seed(1)
   if (!is.null(y_idx)) {
     fac <- sampFun(nrSample)
     yb <- lapply(fac, function(tau) as.numeric(orthdir + tau*dir))
@@ -32,7 +33,7 @@ gen_samples <- function(
     attr(draw,"time") <- Sys.time()
     attr(draw,"os_info") <- sessionInfo()
     if (is.null(path)) stop("Specify path!")
-    save(draw, file = paste0(path,"PoSI/",app,"/y_draw_",c(app,as.character(Sys.time())),".RData"))
+    save(draw, file = paste0(path,"PoSI/",app,"/y_draw_",paste0(app,"_",as.character(Sys.time())),".RData"))
 
     cluster_cl <- makeCluster(n_cores, outfile = "")
     clusterEvalQ(cluster_cl, {library(mgcv)
