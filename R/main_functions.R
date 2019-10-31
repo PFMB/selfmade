@@ -32,9 +32,9 @@ selinf <- function(
 
   # calculate the CIs
   ftlo <- function(t) sum(exp(survr_gr * t / (var_est[1])) * w[l2]) /
-    sum(exp(survr * t / (var_est[2])) * w)
+    sum(exp(survr * t / (var_est[1])) * w)
   ftup <- function(t) sum(exp(survr_le * t / (var_est[1])) * w[!l2]) /
-    sum(exp(survr * t / (var_est[2])) * w)
+    sum(exp(survr * t / (var_est[1])) * w)
 
   testvals <- seq(min(survr) - 8*sqrt(var_est[1]),
                   max(survr) + 8*sqrt(var_est[1]),
@@ -165,30 +165,42 @@ pval_vT_cov <- function(
     dirV <- (VCOV%*%t(vT)/var_est)
     orthdir <- (diag(n) - dirV%*%vT)%*%this_y
 
-    samples <- gen_samples(
+    tstat_mix <- seq(0,tstat, length.out = 4)
+
+    samples <- lapply(tstat_mix, function(tstat_mean){
+      gen_samples(
       orthdir = orthdir,
       dir = dirV,
       this_sd = sqrt(var_est),
-      sampFun = function(n) rnorm(n, mean = 0, sd = sqrt(var_est)),
-      nrSample = nrSamples,
+      sampFun = function(n) rnorm(n, mean = tstat_mean, sd = sqrt(var_est)),
+      nrSample = floor(nrSamples/4),
       checkFun = checkFun,
       init_draw = init_draw,
       set_seed = set_seed,
-      y_idx = y_idx,
+      y_idx = NULL,
       app = app,
       trace = trace,
       n_cores = n_cores,
       path = path)
+    })
+    survr <- mapply(c, samples[[1]], samples[[2]], samples[[3]], samples[[4]], SIMPLIFY = FALSE)
 
-    # extract survived samples and weights
-    survr <- samples$fac[samples$logvals]
-    # nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
-    # denom <- dnorm(survr, mean = tstat, sd = sqrt(var_est))
-    # w <- nom / denom
-    nr_surv <- sum(samples$logvals)
-    cat("No. of survived samples:", nr_surv,"\n")
-    w <- rep(1,nr_surv)
+    samp_res <- lapply(1:length(samples), function(idx) {
 
+      samp <- samples[[idx]]
+      tstat_new <- tstat_mix[idx]
+
+      # extract survived samples and weights
+      survr <- samp$fac[samp$logvals]
+      nom <- dnorm(survr, mean = 0, sd = sqrt(var_est))
+      denom <- dnorm(survr, mean = tstat_new, sd = sqrt(var_est))
+      w <- nom / denom
+      cat("No. of survived samples:", sum(samp$logvals),"\n")
+      list("survr" = survr, "w" = w)
+    })
+
+    survr <- c(sapply(samp_res, function(x) x$survr))
+    w <- c(sapply(samp_res, function(x) x$w))
     var_est <- rep(var_est, 2)
     # cat("Distribution of weigths: \n")
     # print(summary(w))
