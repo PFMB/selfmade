@@ -183,7 +183,6 @@ pval_vT_cov <- function(
       n_cores = n_cores,
       path = path)
     })
-    survr <- mapply(c, samples[[1]], samples[[2]], samples[[3]], samples[[4]], SIMPLIFY = FALSE)
 
     samp_res <- lapply(1:length(samples), function(idx) {
 
@@ -199,6 +198,7 @@ pval_vT_cov <- function(
       list("survr" = survr, "w" = w)
     })
 
+    samples <- mapply(c, samples[[1]], samples[[2]], samples[[3]], samples[[4]], SIMPLIFY = FALSE)
     survr <- c(sapply(samp_res, function(x) x$survr))
     w <- c(sapply(samp_res, function(x) x$w))
     var_est <- rep(var_est, 2)
