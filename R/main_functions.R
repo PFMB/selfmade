@@ -199,8 +199,8 @@ pval_vT_cov <- function(
     })
 
     samples <- mapply(c, samples[[1]], samples[[2]], samples[[3]], samples[[4]], SIMPLIFY = FALSE)
-    survr <- c(sapply(samp_res, function(x) x$survr))
-    w <- c(sapply(samp_res, function(x) x$w))
+    survr <- unlist(c(sapply(samp_res, function(x) x$survr)))
+    w <- unlist(c(sapply(samp_res, function(x) x$w)))
     var_est <- rep(var_est, 2)
     # cat("Distribution of weigths: \n")
     # print(summary(w))
