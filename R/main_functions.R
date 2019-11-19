@@ -33,6 +33,9 @@ selinf <- function(
   pv <- 2*min(pe, 1-pe)
   # }
 
+  if(all(survr > tstat) | all(survr < tstat))
+    return(data.frame(nrsurv = nrsurv, pval = pv, cil = NA, ciu = NA))
+
   # calculate the CIs
   ftlo <- function(t) sum(exp(survr_gr * t / (var_est[1])) * w[l2]) /
     sum(exp(survr * t / (var_est[1])) * w)
@@ -191,7 +194,7 @@ pval_vT_cov <- function(
     var_est <- var
     tstat <- Z
 
-    res_sampling <- list("samp" = ss, "survr" = survr, "s" = s,
+    res_sampling <- list("samp" = ss, "survr" = survr,
                          "tstat" = tstat, "w" = w, "var_est" = var_est)
     attr(res_sampling,"time") <- Sys.time()
     attr(res_sampling,"os_info") <- sessionInfo()
